@@ -14,43 +14,38 @@ import java.util.logging.Logger;
  * @author hcadavid
  */
 public class Consumer extends Thread{
-    
+
     private Queue<Integer> queue;
-    
-    
+
+
     public Consumer(Queue<Integer> queue){
-        this.queue=queue;        
+        this.queue=queue;
     }
-    
+
     @Override
     public void run() {
         while (true) {
-
-            if (queue.size() > 0) {
+            if (queue.isEmpty()){
+                synchronized(queue){
+                    try {
+                        queue.wait();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Consumer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+            else {
                 int elem=queue.poll();
-                System.out.println("Consumer consumes "+elem);                                
+                System.out.println("Consumer consumes "+elem);
+                synchronized(queue) {
+                    queue.notify();
+                }
             }
-            
-        }
-    }
-
-    public void  consume() throws InterruptedException {
-        synchronized (queue) {
-            while (queue.isEmpty()) {
-                queue.wait();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Consumer.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            if (queue.size()>0) {
-                int elem =queue.poll();
-                System.out.println("Consumer consumes " + elem);
-            }
-
-            try { Thread.sleep(1000);
-            }catch (InterruptedException ex){
-                Logger.getLogger(Producer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            queue.notifyAll();
         }
     }
 }
